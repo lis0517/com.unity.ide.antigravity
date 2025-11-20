@@ -132,6 +132,16 @@ namespace Microsoft.Unity.VisualStudio.Editor
 			GUILayout.Label($"<size=10><color=grey>{package.displayName} v{package.version} enabled</color></size>", style);
 			GUILayout.EndHorizontal();
 
+			if (installation is VisualStudioAntigravityInstallation)
+			{
+				var reuseWindow = EditorPrefs.GetBool(VisualStudioAntigravityInstallation.ReuseExistingWindowKey, false);
+				var newReuseWindow = EditorGUILayout.Toggle(new GUIContent("Reuse existing Antigravity window", "When enabled, opens files in an existing Antigravity window if found. When disabled, always opens a new window."), reuseWindow);
+				if (newReuseWindow != reuseWindow)
+					EditorPrefs.SetBool(VisualStudioAntigravityInstallation.ReuseExistingWindowKey, newReuseWindow);
+				
+				EditorGUILayout.Space();
+			}
+
 			EditorGUILayout.LabelField("Generate .csproj files for:");
 			EditorGUI.indentLevel++;
 			SettingsButton(ProjectGenerationFlag.Embedded, "Embedded packages", "", installation);
@@ -229,12 +239,6 @@ namespace Microsoft.Unity.VisualStudio.Editor
 				Debug.LogWarning($"You are trying to open {path} outside a generated project. This might cause problems with IntelliSense and debugging. To avoid this, you can change your .csproj preferences in Edit > Preferences > External Tools and enable {GetProjectGenerationFlagDescription(missingFlag)} generation.");
 
 			var solution = GetOrGenerateSolutionFile(generator);
-			return installation.Open(path, line, column, solution);
-		}
-
-		private static bool OpenFromInstallation(IVisualStudioInstallation installation, string path, int line, int column)
-		{
-			var solution = installation.ProjectGenerator.SolutionFile();
 			return installation.Open(path, line, column, solution);
 		}
 

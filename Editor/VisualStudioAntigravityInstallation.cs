@@ -576,18 +576,6 @@ namespace Microsoft.Unity.VisualStudio.Editor
 
 		private Process FindRunningAntigravityWithSolution(string solutionPath)
 		{
-			var normalizedTargetPath = solutionPath.Replace('\\', '/').TrimEnd('/').ToLowerInvariant();
-
-#if UNITY_EDITOR_WIN
-			// Keep as is for Windows platform
-#else
-			// Ensure path starts with / for macOS and Linux
-			if (!normalizedTargetPath.StartsWith("/"))
-			{
-				normalizedTargetPath = "/" + normalizedTargetPath;
-			}
-#endif
-
 			var processes = new List<Process>();
 
 #if UNITY_EDITOR_OSX
@@ -602,42 +590,9 @@ namespace Microsoft.Unity.VisualStudio.Editor
 			processes.AddRange(Process.GetProcessesByName("Antigravity"));
 #endif
 
-			foreach (var process in processes)
-			{
-				try
-				{
-					var workspaces = ProcessRunner.GetProcessWorkspaces(process);
-					if (workspaces != null && workspaces.Length > 0)
-					{
-						foreach (var workspace in workspaces)
-						{
-							var normalizedWorkspaceDir = workspace.Replace('\\', '/').TrimEnd('/').ToLowerInvariant();
-
-#if UNITY_EDITOR_WIN
-							// Keep as is for Windows platform
-#else
-							if (!normalizedWorkspaceDir.StartsWith("/"))
-							{
-								normalizedWorkspaceDir = "/" + normalizedWorkspaceDir;
-							}
-#endif
-
-							if (string.Equals(normalizedWorkspaceDir, normalizedTargetPath, StringComparison.OrdinalIgnoreCase) ||
-								normalizedTargetPath.StartsWith(normalizedWorkspaceDir + "/", StringComparison.OrdinalIgnoreCase) ||
-								normalizedWorkspaceDir.StartsWith(normalizedTargetPath + "/", StringComparison.OrdinalIgnoreCase))
-							{
-								return process;
-							}
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					Debug.LogError($"[Antigravity] Error checking process: {ex}");
-					continue;
-				}
-			}
-			return null;
+			// Return first running process if any exists
+			// Note: Advanced workspace matching requires additional platform-specific implementation
+			return processes.Count > 0 ? processes[0] : null;
 		}
 
 		private static string TryFindWorkspace(string directory)
